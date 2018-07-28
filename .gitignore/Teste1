@@ -1,0 +1,217 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "'''Considere um arquivo de entrada no formato CSV (comma separated values)\n",
+    "com informações relativas a acidentes na aviação civil brasileira nos últimos 10\n",
+    "anos (arquivo anv.csv)\n",
+    "• As informações estão separadas pelo caracter separador ~ e entre “” (aspas)\n",
+    "\n",
+    "Crie uma função que efetue a leitura do arquivo e processe seus dados identificando o total de ocorrencias no \n",
+    "período avaliado e, baseado nessa informação criar um arquivo de saída em formato JSON (statistics.json) com as\n",
+    "seguintes as estatísticas (número de ocorrências e percentual do total) por fase de operação (coluna aeronave_fase_operacao), \n",
+    "como o exemplo a seguir:\n",
+    "\n",
+    "[\n",
+    " {\n",
+    "  \"fase_operacao\": \"INDETERMINADA\",\n",
+    "  \"ocorrencias\": 71,\n",
+    "  \"percentual\": \"1,369%\"\n",
+    " },\n",
+    " {\n",
+    "  \"fase_operacao\": \"MANOBRA\",\n",
+    "  \"ocorrencias\": 161,\n",
+    "  \"percentual\": \"3,103%\"\n",
+    " },\n",
+    "...,\n",
+    " {\n",
+    "  \"fase_operacao\": \"APROXIMAÇÃO FINAL\",\n",
+    "  \"ocorrencias\": 234,\n",
+    "  \"percentual\": \"4,510%\"\n",
+    " }\n",
+    "]\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 174,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from array import *\n",
+    "import json"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 182,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def createJsonFile(jsonContent, totalIncident):\n",
+    "    print('Total Incident', totalIncident)\n",
+    "    estatistics = []\n",
+    "    \n",
+    "    #criando o conteudo para o arquivo JSON\n",
+    "    for item in jsonContent:\n",
+    "        estatistics.append({\n",
+    "            'fase_operacao':item[0],\n",
+    "            'ocorrencias': item[1],\n",
+    "            \"percentual\": str(round((int(item[1])*100)/int(totalIncident), 3)) +'%'\n",
+    "        })\n",
+    "    print(estatistics)\n",
+    "    \n",
+    "    #Salvando estatisticas no arquivo JSON\n",
+    "    with open('data.json', 'w') as outfile:\n",
+    "        json.dump(estatistics, outfile,indent=4,)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 183,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def createJsonContent(tableArray):\n",
+    "    aeronave_fase_operacao = [] #crio array pra guardar todas das fases da operação\n",
+    "    for line in tableArray:\n",
+    "        aeronaveFaseOperacaoCell = line[20] #pegando cada fase de cada linha do arquivo\n",
+    "        \n",
+    "        # try para verificar se o valor da celula do arquivo ja foi incluido no array aeronave_fase_operacao\n",
+    "        x=[] \n",
+    "        try:\n",
+    "            x = [x for x in aeronave_fase_operacao if aeronaveFaseOperacaoCell in x][0] # localizando o item no array bidimensional\n",
+    "        except:\n",
+    "            print()\n",
+    "        \n",
+    "        \n",
+    "        if len(x) == 0:\n",
+    "            # Se a fase operação nao foi ele localizado inclui a fase operação no array\n",
+    "            aeronave_fase_operacao.insert(len(aeronave_fase_operacao)+1 , [aeronaveFaseOperacaoCell, 0])\n",
+    "        else:\n",
+    "            #se foi localizado\n",
+    "            indexAFO = aeronave_fase_operacao.index(x) #Acha a posição da fase operação no array\n",
+    "            updateAFO = aeronave_fase_operacao[indexAFO][1] #pega o valor antigo do total daquela fase de operaçao\n",
+    "            aeronave_fase_operacao[indexAFO][1] = updateAFO + 1  # soma mais 1 no total daquela fase de operação\n",
+    "\n",
+    "    return aeronave_fase_operacao"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 184,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def readFile(fileName):\n",
+    "    f = open (fileName).readlines() #lendo o arquivo\n",
+    "    header = f.pop(0) #guardando o cabeçalho e removendo ele da lista\n",
+    "    lineArray = [] #Array pra guardar linha\n",
+    "    tableArray = [] #array pra guardar tabela toda\n",
+    "    for line in f:\n",
+    "        splitLine = line.split('~') #separando as celulas por split ~\n",
+    "        for item in splitLine:\n",
+    "            item = item.replace(\"\\\"\", \"\") #removendo o aspas\n",
+    "            lineArray.append(item) #adicionando a celula no array da linha\n",
+    "        tableArray.append(lineArray) #adicionando a linha na tabela\n",
+    "        lineArray=[] #limpando o array da linha para ser usado na proxima interação\n",
+    "    return tableArray"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 185,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "tableArray = readFile('anv.csv');"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 186,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "jsonContent = createJsonContent(tableArray)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 187,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Total Incident 5188\n",
+      "[{'fase_operacao': 'UNKNOWN', 'ocorrencias': 171, 'percentual': '3.296%'}, {'fase_operacao': 'MANEUVERING', 'ocorrencias': 393, 'percentual': '7.575%'}, {'fase_operacao': 'APPROACH', 'ocorrencias': 448, 'percentual': '8.635%'}, {'fase_operacao': 'LANDING', 'ocorrencias': 1515, 'percentual': '29.202%'}, {'fase_operacao': 'EN ROUTE', 'ocorrencias': 1241, 'percentual': '23.921%'}, {'fase_operacao': 'TAKEOFF', 'ocorrencias': 802, 'percentual': '15.459%'}, {'fase_operacao': 'TAXI', 'ocorrencias': 438, 'percentual': '8.443%'}, {'fase_operacao': 'STANDING', 'ocorrencias': 160, 'percentual': '3.084%'}, {'fase_operacao': 'PUSHBACK/TOWING', 'ocorrencias': 5, 'percentual': '0.096%'}, {'fase_operacao': 'UNCONTROLLED DESCENT', 'ocorrencias': 1, 'percentual': '0.019%'}, {'fase_operacao': 'NOT APLICABLE', 'ocorrencias': 0, 'percentual': '0.0%'}, {'fase_operacao': 'EMERGENCY DESCENT', 'ocorrencias': 1, 'percentual': '0.019%'}, {'fase_operacao': '***', 'ocorrencias': 0, 'percentual': '0.0%'}]\n"
+     ]
+    }
+   ],
+   "source": [
+    "createJsonFile(jsonContent, len(tableArray))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
